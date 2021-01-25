@@ -31,10 +31,6 @@ var rootCmd = &cobra.Command{
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		output = ConsoleOutput{}
 
-		if cmd.Parent().Name() == "sage-notebook" {
-			return
-		}
-
 		if verbose {
 			verbose = true
 			console.Verbose = true

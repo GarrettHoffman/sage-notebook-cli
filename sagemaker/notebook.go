@@ -5,6 +5,7 @@ import (
 	"time"
 
 	awsSagemaker "github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	"github.com/garretthoffman/sage-notebook-cli/console"
 	"github.com/garretthoffman/sage-notebook-cli/util"
 )
 
@@ -29,7 +30,7 @@ type NotebookInstance struct {
 	SecurityGroups                      []string
 	SubnetId                            string
 	Url                                 string
-	VolumeSizeInGB                      int64
+	VolumeSizeInGB                      int32
 }
 
 // Notebooks is a collection of Sagemaker notebook instances.
@@ -37,6 +38,14 @@ type NotebookInstances []NotebookInstance
 
 func (sagemaker SDKClient) ListNotebookInstances() (NotebookInstances, error) {
 	return sagemaker.listNotebookInstances(&awsSagemaker.ListNotebookInstancesInput{})
+}
+
+func (sagemaker SDKClient) DescribeNotebookInstance(name string) (NotebookInstance, error) {
+	return sagemaker.describeNotebookInstance(
+		&awsSagemaker.DescribeNotebookInstanceInput{
+			NotebookInstanceName: &name,
+		},
+	)
 }
 
 func (sagemaker SDKClient) listNotebookInstances(i *awsSagemaker.ListNotebookInstancesInput) (NotebookInstances, error) {
@@ -73,4 +82,35 @@ func (sagemaker SDKClient) listNotebookInstances(i *awsSagemaker.ListNotebookIns
 	}
 
 	return notebookInstances, nil
+}
+
+func (sagemaker SDKClient) describeNotebookInstance(i *awsSagemaker.DescribeNotebookInstanceInput) (NotebookInstance, error) {
+	o, err := sagemaker.client.DescribeNotebookInstance(context.TODO(), i)
+
+	console.Debug("%+v", o)
+
+	notebookInstance := NotebookInstance{
+		AcceleratorTypes:                    acceleratorTypesToStrings(o.AcceleratorTypes),
+		AdditionalCodeRepositories:          o.AdditionalCodeRepositories,
+		CreationTime:                        *o.CreationTime,
+		DefaultCodeRepository:               util.DerefOptionalStringPtr(o.DefaultCodeRepository),
+		DirectInternetAccess:                string(o.DirectInternetAccess),
+		FailureReason:                       util.DerefOptionalStringPtr(o.FailureReason),
+		InstanceType:                        string(o.InstanceType),
+		KmsKeyId:                            util.DerefOptionalStringPtr(o.KmsKeyId),
+		LastModifiedTime:                    *o.LastModifiedTime,
+		NetworkInterfaceId:                  util.DerefOptionalStringPtr(o.NetworkInterfaceId),
+		NotebookInstanceArn:                 *o.NotebookInstanceArn,
+		NotebookInstanceLifecycleConfigName: util.DerefOptionalStringPtr(o.NotebookInstanceLifecycleConfigName),
+		NotebookInstanceName:                *o.NotebookInstanceName,
+		NotebookInstanceStatus:              string(o.NotebookInstanceStatus),
+		RoleArn:                             *o.RoleArn,
+		RootAccess:                          string(o.RootAccess),
+		SecurityGroups:                      o.SecurityGroups,
+		SubnetId:                            util.DerefOptionalStringPtr(o.SubnetId),
+		Url:                                 *o.Url,
+		VolumeSizeInGB:                      *o.VolumeSizeInGB,
+	}
+
+	return notebookInstance, err
 }

@@ -8,6 +8,7 @@ import (
 // Client represents a method for accessing Sagemaker
 type Client interface {
 	ListNotebookInstances() (NotebookInstances, error)
+	DescribeNotebookInstance(string) (NotebookInstance, error)
 }
 
 // SDKClient implements access to Sagemaker via the AWS SDK
