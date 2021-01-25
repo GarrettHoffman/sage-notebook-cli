@@ -3,7 +3,6 @@ package cmd
 import (
 	"github.com/pkg/browser"
 
-	"github.com/garretthoffman/sage-notebook-cli/console"
 	"github.com/garretthoffman/sage-notebook-cli/sagemaker"
 	"github.com/spf13/cobra"
 )
@@ -11,19 +10,20 @@ import (
 type launchJupyterLabOperation struct {
 	sagemaker            sagemaker.Client
 	notebookInstanceName string
+	output               Output
 }
 
 func (o launchJupyterLabOperation) execute() {
-	console.Debug("Describing Notebook Instance: %s [API=sagemaker Action=DescribeNotebookInstance]", o.notebookInstanceName)
+	o.output.Debug("Describing Notebook Instance: %s [API=sagemaker Action=DescribeNotebookInstance]", o.notebookInstanceName)
 	notebookInstance, err := o.sagemaker.DescribeNotebookInstance(o.notebookInstanceName)
 
 	if err != nil {
-		console.Error(err, "No notebook instance %s", o.notebookInstanceName)
+		o.output.Fatal(err, "No notebook instance %s", o.notebookInstanceName)
 		return
 	}
 
 	if notebookInstance.NotebookInstanceStatus != "InService" {
-		console.Info("Notebook instance status must be InService to launch Jupyter, run sage notebook start %s", o.notebookInstanceName)
+		o.output.Info("Notebook instance status must be InService to launch Jupyter, run sage notebook start %s", o.notebookInstanceName)
 		return
 	}
 
@@ -31,7 +31,7 @@ func (o launchJupyterLabOperation) execute() {
 	err = browser.OpenURL(jupyterLab)
 
 	if err != nil {
-		console.Error(err, "Error launching jupyterlab for instance %s", o.notebookInstanceName)
+		o.output.Fatal(err, "Error launching jupyterlab for instance %s", o.notebookInstanceName)
 	}
 }
 
@@ -43,6 +43,7 @@ var launchJupyterlabCmd = &cobra.Command{
 		launchJupyterLabOperation{
 			sagemaker:            sagemaker.New(cfg),
 			notebookInstanceName: args[0],
+			output:               output,
 		}.execute()
 	},
 }

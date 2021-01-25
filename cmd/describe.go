@@ -12,14 +12,15 @@ import (
 type describeOperation struct {
 	sagemaker            sagemaker.Client
 	notebookInstanceName string
+	output               Output
 }
 
 func (o describeOperation) execute() {
-	console.Debug("Describing Notebook Instance: %s [API=sagemaker Action=DescribeNotebookInstance]", o.notebookInstanceName)
+	o.output.Debug("Describing Notebook Instance: %s [API=sagemaker Action=DescribeNotebookInstance]", o.notebookInstanceName)
 	notebookInstance, err := o.sagemaker.DescribeNotebookInstance(o.notebookInstanceName)
 
 	if err != nil {
-		console.Error(err, "Could not describe notebook instance %s", o.notebookInstanceName)
+		o.output.Fatal(err, "Could not describe notebook instance %s", o.notebookInstanceName)
 		return
 	}
 
@@ -78,6 +79,7 @@ var describeCmd = &cobra.Command{
 		describeOperation{
 			sagemaker:            sagemaker.New(cfg),
 			notebookInstanceName: args[0],
+			output:               output,
 		}.execute()
 	},
 }

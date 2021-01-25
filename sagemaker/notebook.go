@@ -5,7 +5,6 @@ import (
 	"time"
 
 	awsSagemaker "github.com/aws/aws-sdk-go-v2/service/sagemaker"
-	"github.com/garretthoffman/sage-notebook-cli/console"
 	"github.com/garretthoffman/sage-notebook-cli/util"
 )
 
@@ -43,6 +42,14 @@ func (sagemaker SDKClient) ListNotebookInstances() (NotebookInstances, error) {
 func (sagemaker SDKClient) DescribeNotebookInstance(name string) (NotebookInstance, error) {
 	return sagemaker.describeNotebookInstance(
 		&awsSagemaker.DescribeNotebookInstanceInput{
+			NotebookInstanceName: &name,
+		},
+	)
+}
+
+func (sagemaker SDKClient) StopNotebookInstance(name string) error {
+	return sagemaker.stopNotebookInstance(
+		&awsSagemaker.StopNotebookInstanceInput{
 			NotebookInstanceName: &name,
 		},
 	)
@@ -87,8 +94,6 @@ func (sagemaker SDKClient) listNotebookInstances(i *awsSagemaker.ListNotebookIns
 func (sagemaker SDKClient) describeNotebookInstance(i *awsSagemaker.DescribeNotebookInstanceInput) (NotebookInstance, error) {
 	o, err := sagemaker.client.DescribeNotebookInstance(context.TODO(), i)
 
-	console.Debug("%+v", o)
-
 	notebookInstance := NotebookInstance{
 		AcceleratorTypes:                    acceleratorTypesToStrings(o.AcceleratorTypes),
 		AdditionalCodeRepositories:          o.AdditionalCodeRepositories,
@@ -113,4 +118,9 @@ func (sagemaker SDKClient) describeNotebookInstance(i *awsSagemaker.DescribeNote
 	}
 
 	return notebookInstance, err
+}
+
+func (sagemaker SDKClient) stopNotebookInstance(i *awsSagemaker.StopNotebookInstanceInput) error {
+	_, err := sagemaker.client.StopNotebookInstance(context.TODO(), i)
+	return err
 }
